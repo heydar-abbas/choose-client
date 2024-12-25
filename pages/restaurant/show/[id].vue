@@ -15,7 +15,8 @@ useHead({
 
 const route = useRoute();
 const item = useItemStore();
-const restaurantName = computed(() => item.restaurantItems[0].restaurant.name);
+const {restaurantItems} = storeToRefs(item);
+const restaurantName = computed(() => restaurantItems.value[0]?.restaurant?.name);
 const itemSortDropDown = ref(false);
 
 onMounted(() => {
@@ -50,15 +51,15 @@ onMounted(() => {
 						Sort
 						<IconChevronDown class="-me-0.5 ms-2 h-4 w-4" />
 					</button>
-					<ItemSortDropDown :class="!itemSortDropDown ? 'hidden': ''" />
+					<ItemSortDropDown :class="{hidden: !itemSortDropDown}" />
 				</div>
 			</div>
 			<ul
 				class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
 			>
 				<li
-					v-if="item.restaurantItems.length > 0"
-					v-for="(item, index) in item.restaurantItems"
+					v-if="restaurantItems.length > 0"
+					v-for="(item, index) in restaurantItems"
 					:key="index"
 				>
 					<ItemCard :item="item" />
