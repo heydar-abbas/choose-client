@@ -11,7 +11,7 @@ const Axios = axios.create({
 export const useCityStore = defineStore(
 	"city",
 	() => {
-		const cities = ref<any | null>(null);
+		const cities = ref<any>([]);
 
 		function getCityById(id: string) {
 			let city: any = {};
