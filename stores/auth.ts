@@ -19,11 +19,12 @@ type user = {
 export const useAuthStore = defineStore(
 	"auth",
 	() => {
-		const user = ref<null | any>(null);
+		const user = ref<any>(null);
 		const isLogedin = computed(() => !!user.value);
 		let message = ref<string | null>("");
 		let errorMessage = ref<string | null>("");
 
+		// fix login save token
 		async function login(credentials: any) {
 			let status: number = 0;
 			let inputErrors: any = {};
@@ -59,15 +60,13 @@ export const useAuthStore = defineStore(
 			return { status, inputErrors };
 		}
 
-		// fix login save
 		async function logout() {
 			await Axios.post("/logout")
 				.then(() => {
 					user.value = null;
-					navigateTo("/");
 				})
 				.catch((err) => {
-					console.error(`logout error: ${err}`); //delete log
+					console.error(`logout error: ${err}`);
 				});
 		}
 

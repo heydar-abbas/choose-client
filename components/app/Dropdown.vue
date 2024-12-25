@@ -14,9 +14,10 @@ const src = user.value?.image
 	? ref(`/_nuxt/assets/images/user_image/${user.value?.image}`)
 	: ref("/_nuxt/assets/images/user_image/default.png");
 
-function logout() {
+function handleLogout() {
 	auth.logout();
 	app.openUserMenu = false;
+	navigateTo("/");
 }
 </script>
 
@@ -43,27 +44,38 @@ function logout() {
 			>
 				<div class="px-4 py-3">
 					<span class="block text-sm text-gray-900 dark:text-white">
-						{{ user.name }}
+						{{ user?.name }}
 					</span>
 					<span class="block text-sm text-gray-500 truncate dark:text-gray-400">
-						{{ user.email }}
+						{{ user?.email }}
 					</span>
 				</div>
 				<ul class="py-2">
 					<li>
-						<AppDropdownLink href="/dashboard" @click="app.openUserMenu = false">
+						<AppDropdownLink
+							href="/dashboard"
+							@click="app.openUserMenu = false"
+							:class="{ hidden: $route.fullPath === '/dashboard' }"
+						>
 							Dashboard
 						</AppDropdownLink>
 					</li>
 					<li>
-						<AppDropdownLink href="/profile/edit" @click="app.openUserMenu = false">
+						<AppDropdownLink
+							href="/profile/edit"
+							@click="app.openUserMenu = false"
+						>
 							Profile
 						</AppDropdownLink>
 					</li>
 					<li>
-						<AppDropdownLink href="/" @click="logout">
+						<button
+							type="button"
+							@click="handleLogout"
+							class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+						>
 							Sign out
-						</AppDropdownLink>
+						</button>
 					</li>
 				</ul>
 			</div>
