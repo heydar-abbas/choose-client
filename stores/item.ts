@@ -13,13 +13,12 @@ export const useItemStore = defineStore(
 	"item",
 	() => {
 		const app = useAppStore();
+		const itemData = ref<any>({});
 		const userItems = ref<any>([]);
 		const restaurantItems = ref<any>([]);
 
-		function getItem(id: string) {
-			let targrtItem: any = {};
-			targrtItem = userItems.value.filter((item: any) => item.id == id)[0];
-			return targrtItem;
+		function getItemById(id: string | string[]) {
+			itemData.value = restaurantItems.value.find((item: any) => item.id == id);
 		}
 
 		async function fetchUserItems() {
@@ -32,7 +31,7 @@ export const useItemStore = defineStore(
 				});
 		}
 
-		async function fetchRestaurantItems(id: string |string[]) {
+		async function fetchRestaurantItems(id: string | string[]) {
 			await Axios.get(`/api/item/restaurant/${id}`)
 				.then((response) => {
 					restaurantItems.value = response.data.data;
@@ -102,13 +101,14 @@ export const useItemStore = defineStore(
 		}
 
 		return {
+			itemData,
 			userItems,
 			restaurantItems,
 			fetchUserItems,
 			fetchRestaurantItems,
 			addItem,
 			updateItem,
-			getItem,
+			getItemById,
 			deleteItem,
 		};
 	},

@@ -2,8 +2,9 @@
 import { useAppStore } from "~/stores/app";
 import { useAuthStore } from "~/stores/auth";
 import { useItemStore } from "~/stores/item";
-import { ref, watch } from "vue";
+import { ref, watchEffect } from "vue";
 import { useRoute } from "vue-router";
+import { storeToRefs } from "pinia";
 
 useHead({
 	title: "Show Item",
@@ -15,31 +16,26 @@ definePageMeta({
 
 const route = useRoute();
 const app = useAppStore();
-const auth = useAuthStore();
-const item = useItemStore();
+const { openDeleteConfirmation } = storeToRefs(app);
 
-let targetItem = ref<any>(null);
+const auth = useAuthStore();
+const { isLogedin, user } = storeToRefs(auth);
+
+const item = useItemStore();
+const { itemData } = storeToRefs(item);
 let isAuth = ref(false);
 
-watch(
-	() => route.params.id,
-	(newId: any) => {
-		targetItem.value = item.getItem(newId);
-	},
-	{ immediate: true }
-);
+watchEffect(() => {
+	item.getItemById(route.params.id);
+});
 
-watch(
-	() => targetItem.value,
-	(newItem: any) => {
-		isAuth.value = auth.user?.id == newItem?.user?.id;
-	},
-	{ immediate: true }
-);
+watchEffect(() => {
+	isAuth.value = isLogedin.value && user.value?.id == itemData.value?.user?.id;
+});
 
-const src = targetItem.value?.image
-	? ref<string>(`/_nuxt/assets/images/item_image/${targetItem.value?.image}`)
-	: ref<string>("/_nuxt/assets/images/item_image/default.png");
+const src = itemData.value?.image
+	? ref(`/_nuxt/assets/images/item_image/${itemData.value?.image}`)
+	: ref("/_nuxt/assets/images/item_image/default.png");
 </script>
 
 <template>
@@ -62,26 +58,26 @@ const src = targetItem.value?.image
 					<h2
 						class="mb-2 text-xl font-bold leading-none text-gray-900 py-3 border border-b-gray-400 border-l-transparent border-r-transparent border-t-transparent md:text-2xl dark:text-white"
 					>
-						{{ targetItem?.title }}
+						{{ itemData?.title }}
 					</h2>
 					<p
 						class="mb-4 text-xl font-bold leading-none text-gray-900 py-3 border border-b-gray-400 border-l-transparent border-r-transparent border-t-transparent md:text-2xl dark:text-white"
 					>
-						{{ targetItem?.price }}
+						{{ itemData?.price }}
 						<span class="text-sm text-gray-500 dark:text-gray-400">dinar</span>
 					</p>
 					<dl>
 						<dd
 							class="mb-4 font-semibold text-gray-500 py-3 border border-b-gray-400 border-l-transparent border-r-transparent border-t-transparent sm:mb-5 dark:text-gray-400"
 						>
-							{{ targetItem?.description }}
+							{{ itemData?.description }}
 						</dd>
 					</dl>
 					<dl class="flex flex-col">
 						<dd
 							class="mb-4 font-semibold py-3 border border-b-gray-400 border-l-transparent border-r-transparent border-t-transparent text-gray-500 sm:mb-5 dark:text-gray-400"
 						>
-							#{{ targetItem?.category?.name }}
+							#{{ itemData?.category?.name }}
 						</dd>
 					</dl>
 
@@ -98,9 +94,7 @@ const src = targetItem.value?.image
 							</UiPrimaryButton>
 
 							<UiDangerButton
-								@click="
-									app.openDeleteConfirmation = !app.openDeleteConfirmation
-								"
+								@click="openDeleteConfirmation = !openDeleteConfirmation"
 							>
 								<IconTrash class="w-4 h-4 mr-1.5 -ml-1" />
 								Delete
@@ -114,6 +108,6 @@ const src = targetItem.value?.image
 			</section>
 		</div>
 		<!-- Delete Modal -->
-		<DeleteConfirmation :item="targetItem" />
+		<DeleteConfirmation :item="itemData" />
 	</div>
 </template>

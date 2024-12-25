@@ -15,8 +15,10 @@ useHead({
 
 const route = useRoute();
 const item = useItemStore();
-const {restaurantItems} = storeToRefs(item);
-const restaurantName = computed(() => restaurantItems.value[0]?.restaurant?.name);
+const { restaurantItems } = storeToRefs(item);
+const restaurantName = computed(
+	() => restaurantItems.value[0]?.restaurant?.name
+);
 const itemSortDropDown = ref(false);
 
 onMounted(() => {
@@ -51,27 +53,24 @@ onMounted(() => {
 						Sort
 						<IconChevronDown class="-me-0.5 ms-2 h-4 w-4" />
 					</button>
-					<ItemSortDropDown :class="{hidden: !itemSortDropDown}" />
+					<ItemSortDropDown :class="{ hidden: !itemSortDropDown }" />
 				</div>
 			</div>
+			<!-- Items List -->
 			<ul
+				v-if="restaurantItems.length > 0"
 				class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
 			>
-				<li
-					v-if="restaurantItems.length > 0"
-					v-for="(item, index) in restaurantItems"
-					:key="index"
-				>
+				<li v-for="(item, index) in restaurantItems" :key="index">
 					<ItemCard :item="item" />
 				</li>
-
-				<p
-					v-else
-					class="text-center text-xl text-gray-900 py-8 dark:text-gray-50"
-				>
-					No Restaurants yet!
-				</p>
 			</ul>
+			<p
+				v-else
+				class="text-center text-xl text-gray-900 py-8 dark:text-gray-50"
+			>
+				No Restaurants yet!
+			</p>
 			<div class="w-full text-center">
 				<button
 					type="button"
