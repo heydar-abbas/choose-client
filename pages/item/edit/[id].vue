@@ -1,123 +1,3 @@
-<script setup lang="ts">
-import { ref, reactive, watch } from "vue";
-import { useRoute } from "vue-router";
-import { useAuthStore } from "~/stores/auth";
-import { useCategoryStore } from "~/stores/category";
-import { useRestaurantStore } from "~/stores/restaurant";
-import { useItemStore } from "~/stores/item";
-
-useHead({
-	title: "Edit Item",
-});
-
-definePageMeta({
-	middleware: "auth",
-	layout: "auth",
-});
-
-defineEmits(["change"]);
-
-const route = useRoute();
-const auth = useAuthStore();
-const category = useCategoryStore();
-const restaurant = useRestaurantStore();
-const item = useItemStore();
-let targetItem = ref<any>(null);
-
-watch(
-	() => route.params.id,
-	(newId: any) => {
-		targetItem.value = item.getItem(newId);
-	},
-	{ immediate: true }
-);
-
-const form = reactive({
-	user_id: auth.user?.id,
-	restaurant_id: "",
-	category_id: "",
-	title: "",
-	price: "",
-	description: "",
-	image: "",
-	previewImage: "",
-});
-
-const errorsForm = reactive({
-	restaurant_id: "",
-	category_id: "",
-	title: "",
-	price: "",
-	description: "",
-});
-
-watch(
-	() => targetItem.value,
-	(newItem) => {
-		form.restaurant_id = newItem?.restaurant?.id;
-		form.category_id = newItem?.category?.id;
-		form.title = newItem?.title;
-		form.price = newItem?.price;
-		form.description = newItem?.description;
-		form.image = newItem?.image;
-	},
-	{ immediate: true }
-);
-
-/** Update inputs **/
-watch(
-	() => form.restaurant_id,
-	(newValue) => {
-		form.restaurant_id = newValue;
-	}
-);
-
-watch(
-	() => form.category_id,
-	(newValue) => {
-		form.category_id = newValue;
-	}
-);
-
-let src = form.image
-	? ref<string>(`/_nuxt/assets/images/item_image/${form.image}`)
-	: ref<string>("/_nuxt/assets/images/item_image/default.png");
-
-const formData = new FormData();
-
-function onChangeInput(e: any) {
-	formData.append("itemImage", e.target.files[0] || "");
-	form.image = e.target.files[0].name;
-	form.previewImage = URL.createObjectURL(e.target.files[0]);
-	src.value = form.previewImage;
-}
-
-async function uploadImage() {
-	await useFetch("/api/file/upload/itemimage", {
-		method: "post",
-		body: formData,
-	});
-}
-
-async function submit() {
-	if (formData.get("itemImage") !== null) {
-		await uploadImage();
-	}
-
-	let { status, inputErrors } = await item.updateItem(form, route.params.id);
-
-	if (status === 200) {
-		navigateTo("/dashboard");
-	} else {
-		errorsForm.title = inputErrors?.title;
-		errorsForm.price = inputErrors?.price;
-		errorsForm.category_id = inputErrors?.category_id;
-		errorsForm.restaurant_id = inputErrors?.restaurant_id;
-		errorsForm.description = inputErrors?.description;
-	}
-}
-</script>
-
 <template>
 	<section
 		class="min-h-screen flex items-center justify-center bg-white dark:bg-gray-800"
@@ -240,3 +120,130 @@ async function submit() {
 		</div>
 	</section>
 </template>
+
+<script setup lang="ts">
+import { ref, reactive, watch, watchEffect, onMounted } from "vue";
+import { storeToRefs } from "pinia";
+import { useRoute } from "vue-router";
+import { useAuthStore } from "~/stores/auth";
+import { useCategoryStore } from "~/stores/category";
+import { useRestaurantStore } from "~/stores/restaurant";
+import { useItemStore } from "~/stores/item";
+
+useHead({
+	title: "Edit Item",
+});
+
+definePageMeta({
+	middleware: "auth",
+	layout: "auth",
+});
+
+defineEmits(["change"]);
+
+const route = useRoute();
+const auth = useAuthStore();
+const category = useCategoryStore();
+const restaurant = useRestaurantStore();
+const item = useItemStore();
+const { itemData } = storeToRefs(item);
+const formData = new FormData();
+let src = ref<string>("/_nuxt/assets/images/item_image/default.png");
+
+onMounted(() => {
+	item.getItemById(route.params.id);
+});
+
+onUnmounted(() => {
+	item.itemData = null;
+});
+
+const form = reactive({
+	user_id: auth.user?.id,
+	restaurant_id: "",
+	category_id: "",
+	title: "",
+	price: "",
+	description: "",
+	image: "",
+	previewImage: "",
+});
+
+const errorsForm = reactive({
+	restaurant_id: "",
+	category_id: "",
+	title: "",
+	price: "",
+	description: "",
+});
+/**
+ * https://vuejs.org/guide/essentials/watchers.html#watcheffect
+ */
+watchEffect(() => {
+	form.restaurant_id = itemData.value?.restaurant?.id;
+	form.category_id = itemData.value?.category?.id;
+	form.title = itemData.value?.title;
+	form.price = itemData.value?.price;
+	form.description = itemData.value?.description;
+	form.image = itemData.value?.image;
+});
+
+/**
+ * @TODO The image disappears after reloading
+ */
+watchEffect(() => {
+	src.value = form.image
+		? `/_nuxt/assets/images/item_image/${form.image}`
+		: "/_nuxt/assets/images/item_image/default.png";
+});
+
+/** Update select inputs **/
+watch(
+	() => form.restaurant_id,
+	(newValue) => {
+		form.restaurant_id = newValue;
+	}
+);
+
+watch(
+	() => form.category_id,
+	(newValue) => {
+		form.category_id = newValue;
+	}
+);
+
+function onChangeInput(e: any) {
+	formData.append("itemImage", e.target.files[0] || "");
+	form.image = e.target.files[0].name;
+	form.previewImage = URL.createObjectURL(e.target.files[0]);
+	src.value = form.previewImage;
+}
+
+async function uploadImage() {
+	const { data, error } = await useFetch("/api/file/upload/itemimage", {
+		method: "post",
+		body: formData,
+	});
+	if (error.value) {
+		console.error("Image upload failed:", error.value);
+	}
+}
+
+async function submit() {
+	if (formData.get("itemImage") !== null) {
+		await uploadImage();
+	}
+
+	let { status, inputErrors } = await item.updateItem(form, route.params.id);
+
+	if (status === 200) {
+		navigateTo("/dashboard");
+	} else {
+		errorsForm.title = inputErrors?.title;
+		errorsForm.price = inputErrors?.price;
+		errorsForm.category_id = inputErrors?.category_id;
+		errorsForm.restaurant_id = inputErrors?.restaurant_id;
+		errorsForm.description = inputErrors?.description;
+	}
+}
+</script>

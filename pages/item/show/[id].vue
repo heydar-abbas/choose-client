@@ -1,43 +1,3 @@
-<script setup lang="ts">
-import { useAppStore } from "~/stores/app";
-import { useAuthStore } from "~/stores/auth";
-import { useItemStore } from "~/stores/item";
-import { ref, watchEffect } from "vue";
-import { useRoute } from "vue-router";
-import { storeToRefs } from "pinia";
-
-useHead({
-	title: "Show Item",
-});
-
-definePageMeta({
-	layout: "auth",
-});
-
-const route = useRoute();
-const app = useAppStore();
-const { openDeleteConfirmation } = storeToRefs(app);
-
-const auth = useAuthStore();
-const { isLogedin, user } = storeToRefs(auth);
-
-const item = useItemStore();
-const { itemData } = storeToRefs(item);
-let isAuth = ref(false);
-
-watchEffect(() => {
-	item.getItemById(route.params.id);
-});
-
-watchEffect(() => {
-	isAuth.value = isLogedin.value && user.value?.id == itemData.value?.user?.id;
-});
-
-const src = itemData.value?.image
-	? ref(`/_nuxt/assets/images/item_image/${itemData.value?.image}`)
-	: ref("/_nuxt/assets/images/item_image/default.png");
-</script>
-
 <template>
 	<div
 		class="relative flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-700"
@@ -111,3 +71,52 @@ const src = itemData.value?.image
 		<DeleteConfirmation :item="itemData" />
 	</div>
 </template>
+
+<script setup lang="ts">
+import { useAppStore } from "~/stores/app";
+import { useAuthStore } from "~/stores/auth";
+import { useItemStore } from "~/stores/item";
+import { onMounted } from "vue";
+import { useRoute } from "vue-router";
+
+useHead({
+	title: "Show Item",
+});
+
+definePageMeta({
+	layout: "auth",
+});
+
+const route = useRoute();
+const app = useAppStore();
+const { openDeleteConfirmation } = storeToRefs(app);
+
+const auth = useAuthStore();
+const { isLogedin, user } = storeToRefs(auth);
+
+const item = useItemStore();
+const { itemData } = storeToRefs(item);
+
+let src = ref<string>("/_nuxt/assets/images/item_image/default.png");
+
+onMounted(() => {
+	item.getItemById(route.params.id);
+});
+
+onUnmounted(() => {
+	item.itemData = {};
+});
+
+const isAuth = computed(
+	() => isLogedin.value && user.value?.id == itemData.value?.user?.id
+);
+
+/**
+ * @TODO The image disappears after reloading
+ */
+watchEffect(() => {
+	src.value = itemData.value?.image
+		? `/_nuxt/assets/images/item_image/${itemData.value?.image}`
+		: "/_nuxt/assets/images/item_image/default.png";
+});
+</script>

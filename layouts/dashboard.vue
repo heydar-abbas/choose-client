@@ -16,7 +16,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-	<main class="min-h-screen dark:bg-gray-700">
+	<div class="min-h-screen dark:bg-gray-700">
 		<div class="relative flex flex-col lg:flex-row">
 			<!-- Main Sidebar -->
 			<DashboardSideBar class="hidden lg:block lg:basis-1/4 xl:basis-1/5" />
@@ -37,13 +37,15 @@ onUnmounted(() => {
 			</DashboardSideBar>
 
 			<div
-				class="flex flex-col w-full lg:basis-3/4 xl:basis-4/5 bg-gray-50 dark:bg-gray-800"
+				class="flex flex-col w-full lg:basis-3/4 xl:basis-4/5 overflow-hidden bg-gray-50 dark:bg-gray-800"
 			>
 				<!-- Navbar -->
 				<DashboardNav />
         <!-- Content -->
-				<slot />
+				 <main>
+					 <slot />
+				 </main>
 			</div>
 		</div>
-	</main>
+	</div>
 </template>

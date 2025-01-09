@@ -9,18 +9,17 @@ const Axios = axios.create({
 	withXSRFToken: true,
 });
 
-
 export const useRestaurantStore = defineStore(
 	"restaurant",
 	() => {
 		const app = useAppStore();
 		const cityRestaurants = ref<any>([]);
-		const userRestaurants = ref<null | any>(null);
+		const userRestaurants = ref<any>([]);
+		const restaurantItems = ref<any>([]);
 
 		async function addRestaurant(form: any) {
 			let status = 0;
 			let inputErrors: any = {};
-
 			await Axios.post("/api/restaurants", form)
 				.then((response) => {
 					status = response.status;
@@ -33,15 +32,12 @@ export const useRestaurantStore = defineStore(
 				.catch((error) => {
 					inputErrors = error.response.data.errors;
 				});
-
 			return { status, inputErrors };
 		}
-
 
 		async function updateRestaurant(form: any, id: any) {
 			let status = 0;
 			let inputErrors: any = {};
-
 			await Axios.put(`/api/restaurants/${id}`, form)
 				.then((response) => {
 					status = response.status;
@@ -54,7 +50,6 @@ export const useRestaurantStore = defineStore(
 				.catch((error) => {
 					inputErrors = error?.response?.data?.errors;
 				});
-
 			return { status, inputErrors };
 		}
 
@@ -78,16 +73,30 @@ export const useRestaurantStore = defineStore(
 				});
 		}
 
+		async function fetchRestaurantItems(id: string | string[]) {
+			await Axios.get(`/api/restaurant/${id}/items`)
+				.then((response) => {
+					restaurantItems.value = response.data.data;
+				})
+				.catch((error) => {
+					console.error(`Fetch restaurant items error: ${error}`);
+				});
+		}
+
 		return {
 			cityRestaurants,
 			userRestaurants,
+			restaurantItems,
 			addRestaurant,
 			updateRestaurant,
 			fetchCityRestaurants,
 			fetchUserRestaurants,
+			fetchRestaurantItems,
 		};
 	},
 	{
-		persist: true,
+		persist: {
+			storage: piniaPluginPersistedstate.localStorage(),
+		},
 	}
 );

@@ -1,34 +1,3 @@
-<script setup lang="ts">
-import { useRestaurantStore } from "~/stores/restaurant";
-import { useCityStore } from "~/stores/city";
-import { onMounted, watch, ref } from "vue";
-import { useRoute } from "vue-router";
-import { storeToRefs } from "pinia";
-
-useHead({
-	title: "City restaurants",
-});
-
-const route = useRoute();
-const city = useCityStore();
-const restaurant = useRestaurantStore();
-const { cityRestaurants } = storeToRefs(restaurant);
-let cityName = ref<string>("");
-
-watch(
-	() => route.params.id,
-	async (newId: any) => {
-		const cityData = await city.getCityById(newId);
-		cityName.value = cityData?.name || "Unknown City";
-	},
-	{ immediate: true }
-);
-
-onMounted(() => {
-	restaurant.fetchCityRestaurants(route.params.id);
-});
-</script>
-
 <template>
 	<div
 		class="w-full md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto px-4 md:px-0"
@@ -55,3 +24,38 @@ onMounted(() => {
 		</div>
 	</div>
 </template>
+
+<script setup lang="ts">
+import { useRestaurantStore } from "~/stores/restaurant";
+import { useCityStore } from "~/stores/city";
+import { onMounted, watch, ref } from "vue";
+import { useRoute } from "vue-router";
+import { storeToRefs } from "pinia";
+
+useHead({
+	title: "City restaurants",
+});
+
+const route = useRoute();
+const city = useCityStore();
+const restaurant = useRestaurantStore();
+const { cityRestaurants } = storeToRefs(restaurant);
+let cityName = ref<string>("");
+
+onMounted(() => {
+	restaurant.fetchCityRestaurants(route.params.id);
+});
+
+onUnmounted(() => {
+	restaurant.cityRestaurants = [];
+});
+
+watch(
+	() => route.params.id,
+	async (newId: any) => {
+		const cityData = await city.getCityById(newId);
+		cityName.value = cityData?.name || "Unknown City";
+	},
+	{ immediate: true }
+);
+</script>

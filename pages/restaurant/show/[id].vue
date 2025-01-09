@@ -1,31 +1,3 @@
-<script setup lang="ts">
-import { useItemStore } from "~/stores/item";
-import { useRoute } from "vue-router";
-import { computed, onMounted } from "vue";
-
-useHead({
-	title: "Restaurant Menu",
-	meta: [
-		{
-			name: "description",
-			content: "Restaurant Menu",
-		},
-	],
-});
-
-const route = useRoute();
-const item = useItemStore();
-const { restaurantItems } = storeToRefs(item);
-const restaurantName = computed(
-	() => restaurantItems.value[0]?.restaurant?.name
-);
-const itemSortDropDown = ref(false);
-
-onMounted(() => {
-	item.fetchRestaurantItems(route.params.id);
-});
-</script>
-
 <template>
 	<section
 		class="antialiased px-4 mb-8 lg:px-0 mx-auto w-full md:max-w-2xl lg:max-w-4xl xl:max-w-5xl bg-white dark:bg-gray-700"
@@ -82,3 +54,37 @@ onMounted(() => {
 		</div>
 	</section>
 </template>
+
+<script setup lang="ts">
+import { useRestaurantStore } from "~/stores/restaurant";
+import { useRoute } from "vue-router";
+import { computed, onMounted, onUnmounted } from "vue";
+
+useHead({
+	title: "Restaurant Menu",
+	meta: [
+		{
+			name: "description",
+			content: "Restaurant Menu",
+		},
+	],
+});
+
+const route = useRoute();
+const restaurant = useRestaurantStore();
+const { restaurantItems } = storeToRefs(restaurant);
+
+onMounted(() => {
+	restaurant.fetchRestaurantItems(route.params.id);
+});
+
+onUnmounted(() => {
+	restaurant.restaurantItems = [];
+});
+
+const restaurantName = computed(
+	() => restaurantItems.value[0]?.restaurant?.name
+);
+
+const itemSortDropDown = ref(false);
+</script>

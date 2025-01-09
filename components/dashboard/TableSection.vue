@@ -1,28 +1,20 @@
 <script setup lang="ts">
-import { reactive, ref, watch, onMounted } from "vue";
+import { reactive, ref, watch } from "vue";
 import { useDebounceFn } from "@vueuse/core";
 import { useDashboardStore } from "~/stores/dashboard";
-import { useRestaurantStore } from "~/stores/restaurant";
-import { useItemStore } from "~/stores/item";
 
 const props = defineProps<{
+  userItems: any;
   categories?: any;
   filters?: any;
 }>();
 
 const dashboard = useDashboardStore();
-const restaurant = useRestaurantStore();
-const item = useItemStore();
 const itemClicked = ref(null);
 let params = reactive({
   // search: props.filters.search,
   // field: props.filters.field ?? "id",
   // direction: props.filters.direction ?? "asc",
-});
-
-onMounted(() => {
-  restaurant.fetchUserRestaurants();
-	item.fetchUserItems();
 });
 
 function sort(field: string) {
@@ -137,26 +129,26 @@ function openActionsRecord(selectedItem: any) {
 
           <tbody class="w-full">
             <tr
-              v-if="item.userItems.length > 0"
-              v-for="(userItem, index) in item.userItems"
-              :key="userItem.id"
-              @click="openActionsRecord(userItem)"
+              v-if="userItems.length > 0"
+              v-for="(item, index) in userItems"
+              :key="item.id"
+              @click="openActionsRecord(item)"
               class="w-full grid grid-cols-5 border-b dark:border-gray-700 dark:hover:bg-gray-700 hover:bg-gray-100"
             >
               <th class="px-4 py-3 font-medium text-gray-900 dark:text-white">
                 {{ index + 1 }}
               </th>
               <td class="px-4 py-3">
-                {{ userItem.title }}
+                {{ item.title }}
               </td>
               <td class="px-4 py-3">
-                {{ userItem.category.name }}
+                {{ item.category.name }}
               </td>
               <td class="px-4 py-3">
-                {{ userItem.price }}
+                {{ item.price }}
               </td>
               <td class="px-4 py-3">
-                {{ userItem.restaurant.name }}
+                {{ item.restaurant.name }}
               </td>
             </tr>
             <tr v-else class="w-full border-b dark:border-gray-700">

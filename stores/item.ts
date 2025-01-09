@@ -1,6 +1,6 @@
 import { useAppStore } from "./app";
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, reactive } from "vue";
 import axios from "axios";
 
 const Axios = axios.create({
@@ -13,12 +13,17 @@ export const useItemStore = defineStore(
 	"item",
 	() => {
 		const app = useAppStore();
-		const itemData = ref<any>({});
 		const userItems = ref<any>([]);
-		const restaurantItems = ref<any>([]);
+		const itemData = ref<any>({});
 
-		function getItemById(id: string | string[]) {
-			itemData.value = restaurantItems.value.find((item: any) => item.id == id);
+		async function getItemById(id: string | string[]) {
+			await Axios.get(`api/item/${id}`)
+				.then((response) => {
+					itemData.value = response.data.data;
+				})
+				.catch((error) => {
+					console.error(`GetItemById error: ${error}`);
+				});
 		}
 
 		async function fetchUserItems() {
@@ -31,20 +36,9 @@ export const useItemStore = defineStore(
 				});
 		}
 
-		async function fetchRestaurantItems(id: string | string[]) {
-			await Axios.get(`/api/item/restaurant/${id}`)
-				.then((response) => {
-					restaurantItems.value = response.data.data;
-				})
-				.catch((error) => {
-					console.error(`Fetch restaurant items error: ${error}`);
-				});
-		}
-
 		async function addItem(form: any) {
 			let status = 0;
 			let inputErrors: any = {};
-
 			await Axios.post("/api/items", form)
 				.then((response) => {
 					status = response.status;
@@ -57,19 +51,18 @@ export const useItemStore = defineStore(
 				.catch((error) => {
 					inputErrors = error.response.data.errors;
 				});
-
 			return { status, inputErrors };
 		}
 
 		async function updateItem(form: any, id: string | string[]) {
 			let status = 0;
 			let inputErrors: any = {};
-
 			await Axios.put(`/api/items/${id}`, form)
-				.then((response) => {
+				.then(async (response) => {
 					status = response.status;
 					app.successMessage = response.data.message;
-					fetchUserItems();
+					await fetchUserItems();
+					// await fetchRestaurantItems(form.restaurant_id);
 					setTimeout(() => {
 						app.successMessage = "";
 					}, 5000);
@@ -77,13 +70,11 @@ export const useItemStore = defineStore(
 				.catch((error) => {
 					inputErrors = error.response.data.errors;
 				});
-
 			return { status, inputErrors };
 		}
 
 		async function deleteItem(id: string | string[]) {
 			let status = 0;
-
 			await Axios.delete(`/api/items/${id}`)
 				.then((response) => {
 					status = response.status;
@@ -96,16 +87,13 @@ export const useItemStore = defineStore(
 				.catch((error) => {
 					console.error(`Item Error: ${error}`);
 				});
-
 			return { status };
 		}
 
 		return {
 			itemData,
 			userItems,
-			restaurantItems,
 			fetchUserItems,
-			fetchRestaurantItems,
 			addItem,
 			updateItem,
 			getItemById,
