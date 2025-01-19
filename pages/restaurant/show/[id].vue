@@ -78,10 +78,6 @@ onMounted(() => {
 	restaurant.fetchRestaurantItems(route.params.id);
 });
 
-onUnmounted(() => {
-	restaurant.restaurantItems = [];
-});
-
 const restaurantName = computed(
 	() => restaurantItems.value[0]?.restaurant?.name
 );

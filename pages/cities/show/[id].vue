@@ -46,10 +46,6 @@ onMounted(() => {
 	restaurant.fetchCityRestaurants(route.params.id);
 });
 
-onUnmounted(() => {
-	restaurant.cityRestaurants = [];
-});
-
 watch(
 	() => route.params.id,
 	async (newId: any) => {
