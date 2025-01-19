@@ -9,10 +9,6 @@ useHead({
 
 const city = useCityStore();
 const { cities } = storeToRefs(city);
-
-onMounted(() => {
-	city.fetchCities();
-});
 </script>
 
 <template>
