@@ -16,6 +16,7 @@ export const useRestaurantStore = defineStore(
 		const cityRestaurants = ref<any>([]);
 		const userRestaurants = ref<any>([]);
 		const restaurantItems = ref<any>([]);
+		const restaurantData = ref<any>({});
 
 		async function addRestaurant(form: any) {
 			let status = 0;
@@ -83,15 +84,27 @@ export const useRestaurantStore = defineStore(
 				});
 		}
 
+		async function getRestaurantById(id: string | string[]) {
+			await Axios.get(`api/restaurant/${id}`)
+				.then((response) => {
+					restaurantData.value = response.data.data;
+				})
+				.catch((error) => {
+					console.error(`Get Restaurant By Id error: ${error}`);
+				});
+		}
+
 		return {
 			cityRestaurants,
 			userRestaurants,
 			restaurantItems,
+			restaurantData,
 			addRestaurant,
 			updateRestaurant,
 			fetchCityRestaurants,
 			fetchUserRestaurants,
 			fetchRestaurantItems,
+			getRestaurantById,
 		};
 	},
 	{

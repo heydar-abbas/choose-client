@@ -1,101 +1,3 @@
-<script setup lang="ts">
-import { ref, reactive, watch } from "vue";
-import { useRestaurantStore } from "~/stores/restaurant";
-import { useCityStore } from "~/stores/city";
-
-useHead({
-	title: "Edit Restaurant",
-});
-
-definePageMeta({
-	middleware: "auth",
-	layout: "auth",
-});
-
-defineEmits(["change"]);
-
-const route = useRoute();
-const city = useCityStore();
-const restaurant = useRestaurantStore();
-const { userRestaurants } = storeToRefs(restaurant);
-
-const targetRestaurant = userRestaurants.value.filter(
-	(item: any) => item.id == route.params.id
-)[0];
-
-const form = reactive({
-	city_id: targetRestaurant.city.id,
-	name: targetRestaurant.name,
-	description: targetRestaurant.description,
-	location: targetRestaurant.location,
-	phone: targetRestaurant.phone,
-	logo: targetRestaurant.logo,
-	open_at: targetRestaurant.openAt,
-	close_at: targetRestaurant.closeAt,
-	previewLogo: "",
-});
-
-const errorsForm = reactive({
-	name: "",
-	location: "",
-	phone: "",
-	city_id: "",
-	open_at: "",
-	close_at: "",
-	description: "",
-});
-const src = form.logo
-	? ref(`/_nuxt/assets/images/restaurant_logo/${form.logo}`)
-	: ref("/_nuxt/assets/images/restaurant_logo/default.png");
-
-watch(
-	() => form.city_id,
-	(newValue) => {
-		form.city_id = newValue;
-	}
-);
-
-const formData = new FormData();
-function onChangeInput(e: any) {
-	formData.append("logo", e.target.files[0] || null);
-	form.logo = e.target.files[0].name;
-	form.previewLogo = URL.createObjectURL(e.target.files[0]);
-	src.value = form.previewLogo;
-}
-/**
- *  @TODO fix older logo delete
- */
-async function uploadLogo() {
-	await useFetch(`/api/file/upload/restaurantlogo`, {
-		method: "post",
-		body: formData,
-	});
-}
-
-async function submit() {
-	if (formData.get("logo") !== null) {
-		uploadLogo();
-	}
-
-	let { status, inputErrors } = await restaurant.updateRestaurant(
-		form,
-		route.params.id
-	);
-
-	if (status === 200) {
-		navigateTo("/dashboard");
-	} else {
-		errorsForm.name = inputErrors?.name;
-		errorsForm.location = inputErrors?.location;
-		errorsForm.phone = inputErrors?.phone;
-		errorsForm.city_id = inputErrors?.city_id;
-		errorsForm.open_at = inputErrors?.open_at;
-		errorsForm.close_at = inputErrors?.close_at;
-		errorsForm.description = inputErrors?.description;
-	}
-}
-</script>
-
 <template>
 	<section
 		class="min-h-screen flex items-center justify-center bg-white dark:bg-gray-800"
@@ -240,3 +142,121 @@ async function submit() {
 		</div>
 	</section>
 </template>
+
+<script setup lang="ts">
+import { ref, reactive, watch, watchEffect, onMounted, onUnmounted } from "vue";
+import { useRestaurantStore } from "~/stores/restaurant";
+import { useCityStore } from "~/stores/city";
+import { storeToRefs } from "pinia";
+
+useHead({
+	title: "Edit Restaurant",
+});
+
+definePageMeta({
+	middleware: "auth",
+	layout: "auth",
+});
+
+defineEmits(["change"]);
+
+const route = useRoute();
+const city = useCityStore();
+const restaurant = useRestaurantStore();
+const { restaurantData } = storeToRefs(restaurant);
+const formData = new FormData();
+let src = ref("/_nuxt/assets/images/restaurant_logo/default.png");
+
+onMounted(() => {
+	restaurant.getRestaurantById(route.params.id);
+});
+
+onUnmounted(() => {
+	restaurant.restaurantData = {};
+});
+
+const form = reactive({
+	city_id: "",
+	name: "",
+	description: "",
+	location: "",
+	phone: "",
+	logo: "",
+	open_at: "",
+	close_at: "",
+	previewLogo: "",
+});
+
+watchEffect(() => {
+	form.city_id = restaurantData.value?.city?.id;
+	form.name = restaurantData.value?.name;
+	form.description = restaurantData.value?.description;
+	form.location = restaurantData.value?.location;
+	form.phone = restaurantData.value?.phone;
+	form.logo = restaurantData.value?.logo;
+	form.open_at = restaurantData.value?.openAt;
+	form.close_at = restaurantData.value?.closeAt;
+});
+
+watch(
+	() => form.city_id,
+	(newValue) => {
+		form.city_id = newValue;
+	}
+);
+
+const errorsForm = reactive({
+	name: "",
+	location: "",
+	phone: "",
+	city_id: "",
+	open_at: "",
+	close_at: "",
+	description: "",
+});
+
+watchEffect(() => {
+	src.value = form.logo
+		? `/_nuxt/assets/images/restaurant_logo/${form.logo}`
+		: "/_nuxt/assets/images/restaurant_logo/default.png";
+});
+
+function onChangeInput(e: any) {
+	formData.append("logo", e.target.files[0] || null);
+	form.logo = e.target.files[0].name;
+	form.previewLogo = URL.createObjectURL(e.target.files[0]);
+	src.value = form.previewLogo;
+}
+/**
+ *  @TODO dont'n delete older logo
+ */
+async function uploadLogo() {
+	await useFetch(`/api/file/upload/restaurantlogo`, {
+		method: "post",
+		body: formData,
+	});
+}
+
+async function submit() {
+	if (formData.get("logo") !== null) {
+		uploadLogo();
+	}
+
+	const { status, inputErrors } = await restaurant.updateRestaurant(
+		form,
+		route.params.id
+	);
+
+	if (status === 200) {
+		navigateTo("/dashboard");
+	} else {
+		errorsForm.name = inputErrors?.name;
+		errorsForm.location = inputErrors?.location;
+		errorsForm.phone = inputErrors?.phone;
+		errorsForm.city_id = inputErrors?.city_id;
+		errorsForm.open_at = inputErrors?.open_at;
+		errorsForm.close_at = inputErrors?.close_at;
+		errorsForm.description = inputErrors?.description;
+	}
+}
+</script>
