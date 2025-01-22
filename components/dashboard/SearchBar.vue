@@ -1,7 +1,3 @@
-<script setup>
-const model = defineModel({ required: true });
-</script>
-
 <template>
   <div class="w-full md:w-1/2">
     <form class="flex items-center">
@@ -14,6 +10,7 @@ const model = defineModel({ required: true });
         <input
           v-model="model"
           type="text"
+          name="search"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           placeholder="Search"
         />
@@ -21,3 +18,7 @@ const model = defineModel({ required: true });
     </form>
   </div>
 </template>
+
+<script setup>
+const model = defineModel({ required: true });
+</script>

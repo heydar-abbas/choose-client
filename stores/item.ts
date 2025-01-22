@@ -1,6 +1,6 @@
 import { useAppStore } from "./app";
 import { defineStore } from "pinia";
-import { ref, reactive } from "vue";
+import { ref } from "vue";
 import axios from "axios";
 
 const Axios = axios.create({
@@ -15,6 +15,7 @@ export const useItemStore = defineStore(
 		const app = useAppStore();
 		const userItems = ref<any>([]);
 		const itemData = ref<any>({});
+		const filters = ref<any>({});
 
 		async function getItemById(id: string | string[]) {
 			await Axios.get(`api/item/${id}`)
@@ -26,10 +27,11 @@ export const useItemStore = defineStore(
 				});
 		}
 
-		async function fetchUserItems() {
-			await Axios.get("/api/items")
+		async function fetchUserItems(params: {} = "") {
+			await Axios.get("/api/items", { params })
 				.then((response) => {
-					userItems.value = response.data.data;
+					userItems.value = response.data.items;
+					filters.value = response.data.filters;
 				})
 				.catch((error) => {
 					console.error(`Item Error: ${error}`);
@@ -93,6 +95,7 @@ export const useItemStore = defineStore(
 		return {
 			itemData,
 			userItems,
+			filters,
 			fetchUserItems,
 			addItem,
 			updateItem,
